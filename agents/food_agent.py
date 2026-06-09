@@ -221,6 +221,7 @@ def analyze_nutrition(recipe_name: str) -> str:
 ### 💪 **蛋白质：** {nutrition.get('protein', '-')} g
 ### 🌾 **碳水化合物：** {nutrition.get('carbs', '-')} g
 ### 🥑 **脂肪：** {nutrition.get('fat', '-')} g
+### 🥬 **膳食纤维：** {nutrition.get('fiber', '-')} g
 ### ⭐ **健康评分：** {nutrition.get('health_score', '-')} /10
 ### 🍊 维生素
 {nutrition.get('vitamins', '暂无数据')}

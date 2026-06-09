@@ -5,16 +5,102 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>曦曦饮食助手</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="/static/echarts.min.js"></script>
 <style>
-body{font-family:'Microsoft YaHei',Arial,sans-serif;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);margin:0;}
-.header{text-align:center;padding:20px;background:#d1f0ff;}
-.container{max-width:900px;width:90%;margin:20px auto;background:#fff;border-radius:18px;padding:30px;box-shadow:0 5px 15px rgba(0,0,0,.1);}
-.page{display:none;}
-.page.active{display:block;}
-.option{display:block;margin:12px 0;padding:12px;border:1px solid #ddd;border-radius:12px;cursor:pointer;}
-input[type=text]{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;}
-button{margin-top:20px;padding:10px 20px;border:none;border-radius:12px;background:#8fd3ff;color:white;cursor:pointer;}
-.result-box{background:#fafafa;padding:15px;border-radius:12px;}
+body{
+    position: relative;
+    min-height: 97vh;
+    overflow-x: hidden;
+    font-family:'Microsoft YaHei',Arial,sans-serif;
+
+}
+body::before{
+    content:'';
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background-image:url('/static/catcook.png');
+    background-size:cover;
+    background-position:center;
+    opacity:0.5;
+    z-index:-1;
+    pointer-events:none;
+}
+
+.header{
+    text-align:center;
+    padding:20px;
+    background:#fff1d16e;
+}
+
+.container{
+    flex:1;
+    width:70%;
+    max-width:none;
+
+    height: 100%;
+
+    margin:10px auto;
+
+    background:#ffffffd9;
+    border-radius:20px;
+    box-sizing:border-box;
+    padding:40px;
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,.1);
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.option{
+    display:block;
+    margin:12px 0;
+    padding:12px;
+
+    border:1px solid #ddd;
+    border-radius:12px;
+
+    cursor:pointer;
+}
+
+input[type=text]{
+    width:100%;
+    padding:12px;
+
+    border-radius:10px;
+    border:1px solid #ddd;
+}
+
+button{
+    margin-top:20px;
+
+    padding:12px 24px;
+
+    border:none;
+    border-radius:12px;
+
+    background:#8fd3ff;
+    color:white;
+
+    cursor:pointer;
+}
+
+.result-box{
+    background:#fafafa;
+    padding:15px;
+    border-radius:12px;
+    line-height:1.8;
+}
+
 .thinking-box{
     font: size 18px;
     color:#ff6b9d;
@@ -28,6 +114,21 @@ button{margin-top:20px;padding:10px 20px;border:none;border-radius:12px;backgrou
     100%{content:'...';}
 }
 
+#nutritionChart{
+    width:100%;
+    height:420px;
+    background:#fff;
+    border-radius:20px;
+    margin-bottom:20px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+.tip-text{
+    font-size:14px;
+    color:#888;
+    font-style:italic;
+    text-align:center;
+    margin-top:10px;
+}
 </style>
 </head>
 <body>
@@ -54,12 +155,14 @@ button{margin-top:20px;padding:10px 20px;border:none;border-radius:12px;backgrou
 <div id="page2" class="page">
 <h2>请问您有忌口吗？</h2>
 <input type="text" id="avoid" placeholder="请输入忌口内容">
+<div class="tip-text">💡 如果没有忌口，请直接点击下一步</div>
 <button onclick="nextPage(3)">下一步</button>
 </div>
 
 <div id="page3" class="page">
 <h2>请问您有过敏原吗？</h2>
 <input type="text" id="allergy" placeholder="请输入过敏原">
+<div class="tip-text">💡 如果没有过敏原，请直接点击下一步</div>
 <button onclick="nextPage(4)">下一步</button>
 </div>
 
@@ -75,22 +178,59 @@ button{margin-top:20px;padding:10px 20px;border:none;border-radius:12px;backgrou
 <h2>🍽️ 食谱推荐</h2>
 
 <!-- ⭐ 思考动画区域（新增） -->
-    <div id="recipeThinking" style="display:none;">
-        <div class="thinking-box">
+    <div id="recipeLoading">
+        <video
+            id="thinkingVideo"
+            autoplay
+            loop
+            muted
+            playsinline
+            width="403">
+            <source 
+                src="/static/thinking.mp4" 
+                type="video/mp4">  
+        </video>
            <!-- <div class="cat-animation"></div-->
-            <div id="thinkingText">🐱 曦曦正在思考今日专属食谱...</div>
-        </div>
+            <p>
+                🐱 曦曦正在思考今日专属食谱...
+            </p>
     </div>
 
-<div id="recipeResult" class="result-box"></div>
-<button onclick="goNutrition()">下一步</button>
+<div 
+    id="recipeResult" 
+    class="result-box"
+    style="display:none;">
+</div>
+<button id="nextBtn"
+    onclick="goNutrition()"
+    style="display:none;">
+    下一步
+    </button>
 </div>
 
 <div id="page6" class="page">
 <h2>🥗 营养分析</h2>
-<div id="nutritionResult" class="result-box"></div>
+<div id="nutritionLoading">
+    <video
+        autoplay
+        loop
+        muted
+        playsinline
+        width="403">
+        <source 
+            src="/static/thinking.mp4" 
+            type="video/mp4">
+    </video>
+    <p>
+        🐱 曦曦正在分析营养成分...
+    </p>
 </div>
-
+<div id="nutritionResult" 
+    style="display:none;">
+    <div id="nutritionChart"></div>
+    <div id="nutritionText" class="result-box">
+    </div>
+</div>
 </div>
 
 <script>
@@ -103,43 +243,136 @@ function nextPage(n){
 }
 
 async function generateRecipe(){
- const taste=document.querySelector('input[name="taste"]:checked')?.value||'';
- const avoid=document.getElementById('avoid').value||'无';
- const allergy=document.getElementById('allergy').value||'无';
- const goal=document.querySelector('input[name="goal"]:checked')?.value||'';
 
- const prompt=`偏好口味:${taste}；忌口:${avoid}；过敏原:${allergy}；健康目标:${goal}。请先生成食谱推荐，并单独给出营养分析。`;
+    const taste =
+        document.querySelector(
+            'input[name="taste"]:checked'
+        )?.value || '';
 
- document.getElementById('recipeResult').innerHTML='🐱 曦曦正在思考食谱...';
+    const avoid =
+        document.getElementById(
+            'avoid'
+        ).value || '无';
 
- try{
-   const response=await fetch('/api/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:prompt})
-   });
+    const allergy =
+        document.getElementById(
+            'allergy'
+        ).value || '无';
 
-   const data=await response.json();
+    const goal =
+        document.querySelector(
+            'input[name="goal"]:checked'
+        )?.value || '';
 
-   const txt=data.response || '';
-   const parts=txt.split(/营养分析[:：]/);
+    const prompt =
+        `偏好口味:${taste}；忌口:${avoid}；过敏原:${allergy}；健康目标:${goal}。请先生成食谱推荐，并单独给出营养分析。`;
 
-   recipeText=parts[0] || txt;
-   nutritionText=parts.length>1 ? ('营养分析：'+parts[1]) : '未检测到独立营养分析内容，请根据后端返回格式调整切分规则。';
+    // 立即进入加载页
+    nextPage(5);
 
-   document.getElementById('recipeResult').innerHTML=marked.parse(recipeText);
-   document.getElementById('nutritionResult').innerHTML=marked.parse(nutritionText);
+    document.getElementById(
+        'recipeLoading'
+    ).style.display = 'block';
 
-   nextPage(5);
- }catch(e){
-   document.getElementById('recipeResult').innerHTML='生成失败';
-   nextPage(5);
- }
+    document.getElementById(
+        'recipeResult'
+    ).style.display = 'none';
+
+    document.getElementById(
+        'nextBtn'
+    ).style.display = 'none';
+
+    try{
+
+        const response =
+            await fetch(
+                '/api/chat',
+                {
+                    method:'POST',
+                    headers:{
+                        'Content-Type':'application/json'
+                    },
+                    body:JSON.stringify({
+                        message:prompt
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        const txt =
+            data.response || '';
+
+        const parts =
+            txt.split(/营养分析[:：]/);
+
+        recipeText =
+            parts[0] || txt;
+
+        nutritionText =
+            parts.length > 1
+                ? ('营养分析：'+parts[1])
+                : '未检测到营养分析内容';
+
+        // 隐藏视频
+        document.getElementById(
+            'recipeLoading'
+        ).style.display = 'none';
+
+        // 显示结果
+        document.getElementById(
+            'recipeResult'
+        ).style.display = 'block';
+
+        document.getElementById(
+            'nextBtn'
+        ).style.display = 'inline-block';
+
+        document.getElementById(
+            'recipeResult'
+        ).innerHTML =
+            marked.parse(recipeText);
+
+
+
+    }
+    catch(e){
+
+        document.getElementById(
+            'recipeLoading'
+        ).style.display = 'none';
+
+        document.getElementById(
+            'recipeResult'
+        ).style.display = 'block';
+
+        document.getElementById(
+            'recipeResult'
+        ).innerHTML =
+            '生成失败';
+    }
 }
 
 async function loadNutrition(){
 
     try{
+
+        const loading =
+            document.getElementById(
+                'nutritionLoading'
+            );
+
+        const result =
+            document.getElementById(
+                'nutritionResult'
+            );
+
+        // 显示动画
+        loading.style.display = 'block';
+
+        // 隐藏结果
+        result.style.display = 'none';
 
         const response = await fetch(
             '/api/nutrition',
@@ -149,15 +382,45 @@ async function loadNutrition(){
         );
 
         const data = await response.json();
+        console.log(data.nutrition);
+
+        // 隐藏动画
+        loading.style.display = 'none';
+
+        // 显示结果
+        result.style.display = 'block';
 
         document.getElementById(
-            'nutritionResult'
+            'nutritionText'//////////////////////////////
         ).innerHTML =
             marked.parse(
                 data.nutrition || '暂无数据'
             );
+        //renderNutritionChart(35,18,60,12,620);
+        
+        const nutrition =
+             extractNutrition(
+             data.nutrition || ''
+        );
+        console.log(nutrition);
+
+        renderNutritionChart(
+            nutrition.protein,
+            nutrition.fat,
+            nutrition.carb,
+            nutrition.fiber,
+            nutrition.kcal
+        );
 
     }catch(e){
+
+        document.getElementById(
+            'nutritionLoading'
+        ).style.display = 'none';
+
+        document.getElementById(
+            'nutritionResult'
+        ).style.display = 'block';
 
         document.getElementById(
             'nutritionResult'
@@ -169,14 +432,139 @@ async function loadNutrition(){
 async function goNutrition(){
 
     nextPage(6);
-
-    document.getElementById(
-        'nutritionResult'
-    ).innerHTML =
-        '🐱 曦曦正在分析营养成分...';
-
     await loadNutrition();
 }
+
+function renderNutritionChart(
+    protein,
+    fat,
+    carb,
+    fiber,
+    kcal
+){
+
+    const chart =
+        echarts.init(
+            document.getElementById(
+                'nutritionChart'
+            )
+        );
+
+    const option = {
+
+        color:[
+            '#7BC96F',
+            '#F6C453',
+            '#FF8A65',
+            '#64B5F6'
+        ],
+
+        tooltip:{
+            trigger:'item',
+            formatter:
+                '{b}<br>{c}g ({d}%)'
+        },
+
+        title:{
+            text:
+                kcal + '\nkcal',
+
+            left:'center',
+            top:'42%',
+
+            textStyle:{
+                fontSize:24,
+                fontWeight:'bold'
+            }
+        },
+
+        legend:{
+            bottom:10,
+            selectedMode:false
+        },
+
+        series:[
+            {
+                type:'pie',
+
+                radius:[
+                    '55%',
+                    '75%'
+                ],
+
+                itemStyle:{
+                    borderRadius:10,
+                    borderColor:'#fff',
+                    borderWidth:4
+                },
+
+                label:{
+                    formatter:
+                        '{b}\n{d}%'
+                },
+
+                data:[
+                    {
+                        value:protein,
+                        name:'蛋白质'
+                    },
+                    {
+                        value:fat,
+                        name:'脂肪'
+                    },
+                    {
+                        value:carb,
+                        name:'碳水'
+                    },
+                    {
+                        value:fiber,
+                        name:'膳食纤维'
+                    }
+                ]
+            }
+        ]
+    };
+
+    chart.setOption(option);
+
+    window.addEventListener(
+        'resize',
+        ()=>chart.resize()
+    );
+}
+
+function extractNutrition(text){
+
+    const nutritionPart =
+        text.split("### ⭐")[0];
+
+    console.log("营养区块：");
+    console.log(nutritionPart);
+
+    return {
+
+        kcal:Number(
+            nutritionPart.match(/热量.*?(\d+(?:\.\d+)?)/)?.[1] || 0
+        ),
+
+        protein:Number(
+            nutritionPart.match(/蛋白质.*?(\d+(?:\.\d+)?)/)?.[1] || 0
+        ),
+
+        carb:Number(
+            nutritionPart.match(/碳水化合物.*?(\d+(?:\.\d+)?)/)?.[1] || 0
+        ),
+
+        fat:Number(
+            nutritionPart.match(/脂肪.*?(\d+(?:\.\d+)?)/)?.[1] || 0
+        ),
+
+        fiber:Number(
+            nutritionPart.match(/膳食纤维.*?(\d+(?:\.\d+)?)/)?.[1] || 0
+        )
+    };
+}
+
 </script>
 </body>
 </html>

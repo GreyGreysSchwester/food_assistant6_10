@@ -25,6 +25,7 @@ class NutritionAnalyzer:
         - protein: 蛋白质含量（克）
         - carbs: 碳水化合物含量（克）
         - fat: 脂肪含量（克）
+        - fiber: 膳食纤维含量（克）
         - vitamins: 维生素含量摘要
         - minerals: 矿物质含量摘要
         - health_score: 健康评分（1-10分）
@@ -65,6 +66,7 @@ class NutritionAnalyzer:
                 "protein": 0,
                 "carbs": 0,
                 "fat": 0,
+                "fiber": 0,
                 "vitamins": "待分析",
                 "minerals": "待分析",
                 "health_score": 0,
