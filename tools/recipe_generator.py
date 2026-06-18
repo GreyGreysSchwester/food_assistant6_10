@@ -40,7 +40,25 @@ class RecipeGenerator:
         - difficulty: 难度等级（简单/中等/困难）
         - nutrition_info: 营养信息摘要
         
-        请确保食谱符合用户的忌口和过敏要求。
+        ingredients必须是JSON数组，具体内容按照生成的食谱要求填写。
+        正确示例：
+        "ingredients":[
+            "500克鸡胸肉",
+            "20克花椒"
+        ]
+        错误示例：
+        "ingredients":"500克鸡胸肉,20克花椒"
+        
+        steps必须是JSON数组，具体内容按照生成的食谱要求填写。
+        正确示例：
+        "steps":[
+            "鸡胸肉切块",
+            "热锅下油"
+        ]
+        错误示例：
+        "steps":"鸡胸肉切块，热锅下油"
+        
+        你的用户是人类。请确保食谱符合用户的忌口和过敏要求，不要输出宠物食谱，不要输出解释性文字，不要使用markdown代码块，不要输出特殊字符，不要输出'''json，要输出食材用量，要说中文。
         """
         
         try:
@@ -73,12 +91,16 @@ class RecipeGenerator:
             end_idx = response_text.rfind('}') + 1
             json_str = response_text[start_idx:end_idx]
             recipe_data = json.loads(json_str)
+
+            print("ingredients类型:", type(recipe_data.get("ingredients")))
+            print("steps类型:", type(recipe_data.get("steps")))
+
             return recipe_data
         except Exception as e:
             # 如果解析失败，返回默认值
             print(f"JSON解析失败: {e}")
             return {
-                "name": "喵喵特制料理",
+                "name": "曦曦特制料理",
                 "ingredients": ["食材待定"],
                 "steps": ["烹饪步骤待定"],
                 "cooking_time": 30,
@@ -125,7 +147,7 @@ class RecipeGenerator:
         except Exception as e:
             print(f"JSON解析失败: {e}")
             return {
-                "name": "喵喵特制料理",
+                "name": "曦曦特制料理",
                 "ingredients": ["食材待定"],
                 "steps": ["烹饪步骤待定"],
                 "cooking_time": 30,

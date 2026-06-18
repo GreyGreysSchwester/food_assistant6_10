@@ -6,6 +6,8 @@
 <title>曦曦饮食助手</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="/static/echarts.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <style>
 body{
     position: relative;
@@ -40,7 +42,6 @@ body::before{
     width:70%;
     max-width:none;
 
-    height: 100%;
 
     margin:10px auto;
 
@@ -51,6 +52,7 @@ body::before{
 
     box-shadow:
         0 5px 15px rgba(0,0,0,.1);
+        
 }
 
 .page{
@@ -88,10 +90,17 @@ button{
     border:none;
     border-radius:12px;
 
-    background:#8fd3ff;
-    color:white;
+    background:#ffde8b;
+    color:rgb(255, 255, 255);
+    font-size:16px;
 
     cursor:pointer;
+}
+button:hover{
+    transform:scale(1.05);
+}
+button:active{
+    transform:scale(0.95);
 }
 
 .result-box{
@@ -122,6 +131,14 @@ button{
     margin-bottom:20px;
     box-shadow:0 4px 12px rgba(0,0,0,.08);
 }
+#nutritionCompareChart{
+    width:100%;
+    height:450px;
+    background:#fff;
+    border-radius:20px;
+    margin-bottom:20px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
 .tip-text{
     font-size:14px;
     color:#888;
@@ -129,6 +146,236 @@ button{
     text-align:center;
     margin-top:10px;
 }
+
+/* 蔬菜区域 */
+#veggie-world{
+    position:fixed;
+    bottom:0;
+    left:0;
+
+    width:100%;
+    height:203px;
+
+    overflow:hidden;
+
+    pointer-events:none;
+
+    z-index:5;
+}
+
+/* 单个蔬菜 */
+.veggie{
+    position:absolute;
+    font-size:40px;
+    user-select:none;
+}
+
+/* 摇一摇按钮 */
+#shakeBtn{
+    position: absolute;
+
+    right:20px;
+    bottom:40px;
+
+    z-index:999;
+
+    border:none;
+
+    padding:12px 12px;
+
+    border-radius:50px;
+
+    cursor:pointer;
+
+    background:#fff1d16e;
+    color:white;
+    font-size:33px;
+}
+
+/* 包裹容器 */
+.shake-wrapper{
+    position:fixed;
+    right:30px;
+    bottom:30px;
+    z-index:9999;
+}
+
+/* 提示文字 */
+.shake-tip{
+    position:absolute;
+
+    right:85px;
+    top:50%;
+
+    transform:
+        translateY(-50%)
+        translateX(10px);
+
+    white-space:nowrap;
+
+    background:rgba(50,50,50,0.9);
+
+    color:white;
+
+    padding:8px 12px;
+
+    border-radius:12px;
+
+    font-size:14px;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transition:all .3s ease;
+}
+
+/* 小三角 */
+.shake-tip::after{
+    content:"";
+
+    position:absolute;
+
+    right:-6px;
+    top:50%;
+
+    transform:translateY(-50%);
+
+    border-left:6px solid rgba(50,50,50,0.9);
+    border-top:6px solid transparent;
+    border-bottom:6px solid transparent;
+}
+
+/* 鼠标悬停显示 */
+.shake-wrapper:hover .shake-tip{
+
+    opacity:1;
+
+    transform:
+        translateY(-50%)
+        translateX(0);
+}
+
+.welcome-page{
+    text-align: center;
+    padding:20px;
+    background:#fff1d183;
+    border-radius:24px;
+    line-height:1.8;
+    color:#000;
+    font-size:16px;
+    margin-bottom:20px;
+    
+}
+
+#recipeloading{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+#thinkingVideo{
+    display: block;
+    margin:0 auto ;
+
+}
+#recipeLoading p{
+    margin-top: 10px;
+    font-size: 16px;
+    color:#000;
+    text-align: center;
+}
+#nutritionLoading{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+#saveCardBtn{
+    display: none;
+
+    margin-top:20px;
+
+    padding:15px 30px;
+
+    border:none;
+
+    border-radius:25px;
+
+    cursor:pointer;
+
+    font-size:18px;
+
+    background:#ffde8b;
+
+    color:white;
+
+    transition:.3s;
+}
+
+#saveCardBtn:hover{
+
+    transform:scale(1.05);
+}
+
+#shareCard{
+
+    position:fixed;
+
+    left:-9999px;
+
+    top:0;
+
+    width:650px;
+
+    padding:30px;
+
+    background:white;
+
+    border-radius:20px;
+
+    font-family:'Microsoft YaHei';
+
+    box-shadow:0 5px 20px rgba(0,0,0,.15);
+}
+
+#shareCard > h2{
+
+    text-align:center;
+
+    color:#4CAF50;
+}
+
+#shareCard h3{
+
+    text-align:left;
+    font-size:20px;
+    color:black;
+}
+
+.card-subtitle{
+
+    text-align:center;
+
+    color:#666;
+}
+
+.card-footer{
+
+    text-align:center;
+
+    color:#999;
+
+    font-size:12px;
+}
+
+.action-area{
+    text-align: center;
+    margin-top: 20px;
+}
+
+
 </style>
 </head>
 <body>
@@ -138,9 +385,9 @@ button{
 
 <div class="container">
 
-<div id="page0" class="page active">
-<h2>欢迎使用曦曦饮食助手</h2>
-<p>点击开始进入饮食偏好采集。</p>
+<div id="page0" class="page active welcome-page">
+<h2>欢迎使用曦曦饮食助手！</h2>
+<p>点击“开始”，进入饮食偏好采集。</p>
 <button onclick="nextPage(1)">开始</button>
 </div>
 
@@ -185,7 +432,7 @@ button{
             loop
             muted
             playsinline
-            width="403">
+            width="500">
             <source 
                 src="/static/thinking.mp4" 
                 type="video/mp4">  
@@ -204,7 +451,7 @@ button{
 <button id="nextBtn"
     onclick="goNutrition()"
     style="display:none;">
-    下一步
+    进行营养分析
     </button>
 </div>
 
@@ -216,9 +463,9 @@ button{
         loop
         muted
         playsinline
-        width="403">
+        width="500">
         <source 
-            src="/static/thinking.mp4" 
+            src="/static/analyzing.mp4" 
             type="video/mp4">
     </video>
     <p>
@@ -228,18 +475,56 @@ button{
 <div id="nutritionResult" 
     style="display:none;">
     <div id="nutritionChart"></div>
+    <div id="nutritionCompareChart"></div>
     <div id="nutritionText" class="result-box">
     </div>
 </div>
+
+<!--带走按钮-->
+<div class="action-area">        
+    <button            
+        id="saveCardBtn">       
+        👜带走
+    </button>
+</div>
+
 </div>
 
 <script>
 let recipeText='';
 let nutritionText='';
 
+/*
 function nextPage(n){
  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
  document.getElementById('page'+n).classList.add('active');
+}
+ */
+function nextPage(n){
+
+    document.querySelectorAll('.page')
+        .forEach(p=>p.classList.remove('active'));
+
+    const page = document.getElementById('page'+n);
+
+    page.classList.add('active');
+
+    page.animate(
+        [
+            {
+                opacity:0,
+                transform:'translateX(50px)'
+            },
+            {
+                opacity:1,
+                transform:'translateX(0)'
+            }
+        ],
+        {
+            duration:400,
+            easing:'ease-out'
+        }
+    );
 }
 
 async function generateRecipe(){
@@ -303,6 +588,9 @@ async function generateRecipe(){
 
         const txt =
             data.response || '';
+
+        console.log('data response：');
+        console.log(txt);
 
         const parts =
             txt.split(/营养分析[:：]/);
@@ -374,6 +662,11 @@ async function loadNutrition(){
         // 隐藏结果
         result.style.display = 'none';
 
+        // 隐藏按钮
+        document.getElementById(
+            "saveCardBtn"
+        ).style.display="none";
+
         const response = await fetch(
             '/api/nutrition',
             {
@@ -389,6 +682,11 @@ async function loadNutrition(){
 
         // 显示结果
         result.style.display = 'block';
+
+        // 显示按钮
+        document.getElementById(
+            "saveCardBtn"
+        ).style.display="inline-block";
 
         document.getElementById(
             'nutritionText'//////////////////////////////
@@ -411,6 +709,13 @@ async function loadNutrition(){
             nutrition.fiber,
             nutrition.kcal
         );
+        renderNutritionCompareChart(
+            nutrition.protein,
+            nutrition.fat,
+            nutrition.carb,
+            nutrition.fiber,
+            nutrition.kcal
+        );
 
     }catch(e){
 
@@ -421,6 +726,9 @@ async function loadNutrition(){
         document.getElementById(
             'nutritionResult'
         ).style.display = 'block';
+        document.getElementById(
+            "saveCardBtn"
+        ).style.display="inline-block";
 
         document.getElementById(
             'nutritionResult'
@@ -533,6 +841,115 @@ function renderNutritionChart(
     );
 }
 
+function renderNutritionCompareChart(
+    protein,
+    fat,
+    carb,
+    fiber
+){
+
+    const chart = echarts.init(
+        document.getElementById(
+            'nutritionCompareChart'
+        )
+    );
+
+    const currentData = [
+        protein,
+        fat,
+        carb,
+        fiber
+    ];
+
+    const recommendData = [
+        25,
+        20,
+        75,
+        10
+    ];
+
+    const names = [
+        '蛋白质',
+        '脂肪',
+        '碳水',
+        '膳食纤维'
+    ];
+
+    const option = {
+
+        title:{
+            text:'当前菜谱与推荐摄入对比',
+            left:'center'
+        },
+
+        tooltip:{
+
+            trigger:'axis',
+
+            axisPointer:{
+                type:'shadow'
+            },
+
+            formatter:function(params){
+
+                const index =
+                    params[0].dataIndex;
+
+                const current =
+                    currentData[index];
+
+                const recommend =
+                    recommendData[index];
+
+                const diff =
+                    current - recommend;
+
+                return `
+                    <b>${names[index]}</b><br/>
+                    当前菜谱：${current.toFixed(1)}g<br/>
+                    推荐摄入：${recommend.toFixed(1)}g<br/>
+                    差值：${diff>0?'+':''}${diff.toFixed(1)}g
+                `;
+            }
+        },
+
+        legend:{
+            bottom:10,
+            selectedMode:false
+        },
+
+        xAxis:{
+            type:'category',
+            data:names
+        },
+
+        yAxis:{
+            type:'value',
+            name:'克(g)'
+        },
+
+        series:[
+            {
+                name:'当前菜谱',
+                type:'bar',
+                data:currentData
+            },
+            {
+                name:'推荐摄入',
+                type:'bar',
+                data:recommendData
+            }
+        ]
+    };
+
+    chart.setOption(option);
+
+    window.addEventListener(
+        'resize',
+        ()=>chart.resize()
+    );
+}
+
 function extractNutrition(text){
 
     const nutritionPart =
@@ -541,30 +958,447 @@ function extractNutrition(text){
     console.log("营养区块：");
     console.log(nutritionPart);
 
+    console.log("原始营养分析：");
+    console.log(text);
+
     return {
 
         kcal:Number(
-            nutritionPart.match(/热量.*?(\d+(?:\.\d+)?)/)?.[1] || 0
-        ),
-
-        protein:Number(
-            nutritionPart.match(/蛋白质.*?(\d+(?:\.\d+)?)/)?.[1] || 0
-        ),
-
-        carb:Number(
-            nutritionPart.match(/碳水化合物.*?(\d+(?:\.\d+)?)/)?.[1] || 0
-        ),
-
-        fat:Number(
-            nutritionPart.match(/脂肪.*?(\d+(?:\.\d+)?)/)?.[1] || 0
-        ),
-
-        fiber:Number(
-            nutritionPart.match(/膳食纤维.*?(\d+(?:\.\d+)?)/)?.[1] || 0
-        )
+    nutritionPart.match(/热量.*?(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/"calories"\s*:\s*(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/calories.*?(\d+(?:\.\d+)?)/i)?.[1]
+    ||
+    0
+),
+protein:Number(
+    nutritionPart.match(/蛋白质.*?(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/"protein"\s*:\s*(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/protein.*?(\d+(?:\.\d+)?)/i)?.[1]
+    ||
+    0
+),
+carb:Number(
+    nutritionPart.match(/碳水化合物.*?(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/"carbs"\s*:\s*(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/carbs.*?(\d+(?:\.\d+)?)/i)?.[1]
+    ||
+    0
+),
+fat:Number(
+    nutritionPart.match(/脂肪.*?(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/"fat"\s*:\s*(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/fat.*?(\d+(?:\.\d+)?)/i)?.[1]
+    ||
+    0
+),
+fiber:Number(
+    nutritionPart.match(/膳食纤维.*?(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/"fiber"\s*:\s*(\d+(?:\.\d+)?)/)?.[1]
+    ||
+    nutritionPart.match(/fiber.*?(\d+(?:\.\d+)?)/i)?.[1]
+    ||
+    0
+)
     };
+
+}
+
+/*Matter.js 蔬菜重力系统*/
+// 所有蔬菜物理体
+let veggieBodies = [];
+
+// Matter引擎
+let engine;
+
+// Matter世界
+let world;
+
+/*页面加载完成后启动*/
+window.addEventListener("load", () => {
+
+    initVeggieWorld();
+
+});
+
+
+/*初始化蔬菜世界*/
+function initVeggieWorld(){
+
+    // Matter模块
+    const Engine = Matter.Engine;
+    const Render = Matter.Render;
+    const Runner = Matter.Runner;
+    const Bodies = Matter.Bodies;
+    const Composite = Matter.Composite;
+
+    // 创建引擎
+    engine = Engine.create();
+
+    world = engine.world;
+
+    // 创建渲染器
+    const render = Render.create({
+
+        element: document.getElementById("veggie-world"),
+
+        engine: engine,
+
+        options: {
+            width: window.innerWidth,
+            height: 220,
+            wireframes: false,
+            background: "transparent"
+        }
+    });
+
+    // 启动渲染
+    Render.run(render);
+
+    // 启动物理计算
+    const runner = Runner.create();
+
+    Runner.run(runner, engine);
+
+    /*创建地板*/
+    const ground = Bodies.rectangle(
+        window.innerWidth / 2,
+        223,
+        window.innerWidth,
+        40,
+        {
+            isStatic: true
+        }
+    );
+
+    Composite.add(world, ground);
+
+    /*创建左右墙壁*/
+    const leftWall = Bodies.rectangle(
+        -20,
+        110,
+        40,
+        220,
+        {
+            isStatic: true
+        }
+    );
+
+    const rightWall = Bodies.rectangle(
+        window.innerWidth + 20,
+        110,
+        40,
+        220,
+        {
+            isStatic: true
+        }
+    );
+
+    Composite.add(world, [leftWall, rightWall]);
+
+    /*蔬菜种类*/
+    const veggies = [
+        "🥕",
+        "🥦",
+        "🍅",
+        "🥔",
+        "🥑",
+        "🥬",
+        "🧅",
+        "🍆",
+        "🍐",
+        "🍠",
+        "🍋",
+        "🍊",
+        "🍇",
+        "🍈",
+        "🍉", 
+        "🧀",
+        "🥥",
+        "🥝",
+        "🌶️",
+        "🦐",
+        "🍗",
+        "🥩",
+        "🥚",
+        "🥖",
+        "🥯"
+    ];
+
+    /*生成35个蔬菜*/
+    for(let i=0;i<35;i++){
+
+        const emoji =
+            veggies[
+                Math.floor(
+                    Math.random()*veggies.length
+                )
+            ];
+
+        createVeggie(emoji);
+    }
+
+    /*摇一摇按钮*/
+    document
+        .getElementById("shakeBtn")
+        .addEventListener("click", shakeVeggies);
+}
+
+
+/*创建一个蔬菜*/
+function createVeggie(emoji){
+
+    const Bodies = Matter.Bodies;
+    const Composite = Matter.Composite;
+
+    // 创建DOM
+    const div = document.createElement("div");
+
+    div.className = "veggie";
+
+    div.innerHTML = emoji;
+
+    document
+        .getElementById("veggie-world")
+        .appendChild(div);
+
+    // 创建物理体
+    const body = Bodies.circle(
+
+        Math.random() * window.innerWidth,
+
+        -100 - Math.random() * 500,
+
+        35,
+
+        {
+            restitution: 0.7,
+            friction: 0.05,
+
+            render: {
+                fillStyle: "transparent",
+                strokeStyle: "transparent",
+                lineWidth: 0
+            }
+        }
+    );
+
+    // 添加到世界
+    Composite.add(world, body);
+
+    // 保存
+    veggieBodies.push({
+        body: body,
+        element: div
+    });
+
+    /*每一帧同步位置*/
+    Matter.Events.on(
+        engine,
+        "afterUpdate",
+        () => {
+
+            div.style.left =
+                (body.position.x - 18) + "px";
+
+            div.style.top =
+                (body.position.y - 18) + "px";
+
+            div.style.transform =
+                `rotate(${body.angle}rad)`;
+        }
+    );
+}
+
+
+/* 摇一摇*/
+function shakeVeggies(){
+
+    veggieBodies.forEach(item => {
+
+        Matter.Body.applyForce(
+
+            item.body,
+
+            item.body.position,
+
+            {
+                x:(Math.random()-0.5)*0.05,
+                y:-0.08
+            }
+        );
+
+    });
+
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+    const btn =
+        document.getElementById("saveCardBtn");
+
+    if(btn){
+
+        btn.addEventListener(
+            "click",
+            generateShareCard
+        );
+    }
+
+});
+
+/*导出分享卡片*/
+function generateShareCard(){
+
+    /*复制食谱内容*/
+    document.getElementById(
+        "cardRecipe"
+    ).innerHTML =
+    document.getElementById(
+        "recipeResult"
+    ).innerHTML;
+
+
+    /*复制营养文字*/
+    document.getElementById(
+        "cardNutritionText"
+    ).innerHTML =
+    document.getElementById(
+        "nutritionText"
+    ).innerHTML;
+
+
+    /*复制ECharts图表*/
+    const chartCanvas =
+        document.querySelector(
+            "#nutritionChart canvas"
+        );
+
+    if(chartCanvas){
+
+        const img =
+            chartCanvas.toDataURL(
+                "image/png"
+            );
+
+        document.getElementById(
+            "cardNutritionChart"
+        ).innerHTML =
+
+        `<img
+            src="${img}"
+            style="
+                width:100%;
+                margin-top:15px;
+            "
+        >`;
+    }
+
+        const compareCanvas =
+        document.querySelector(
+            "#nutritionCompareChart canvas"
+        );
+
+        if(compareCanvas){
+
+            const img =
+                compareCanvas.toDataURL(
+                    "image/png"
+                );
+
+            document.getElementById(
+                "cardNutritionCompareChart"
+            ).innerHTML =
+
+            `<img
+                src="${img}"
+                style="
+                    width:100%;
+                    margin-top:15px;
+                "
+            >`;
+        }
+
+
+    /*生成PNG*/
+    html2canvas(
+        document.getElementById(
+            "shareCard"
+        ),
+        {
+            scale:2
+        }
+    ).then(canvas=>{
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+        link.download =
+            "曦曦今日食谱.png";
+
+        link.href =
+            canvas.toDataURL(
+                "image/png"
+            );
+
+        link.click();
+
+    });
+
 }
 
 </script>
+
+<div id="veggie-world"></div>
+<div class="shake-wrapper">
+    <button id="shakeBtn">🐾</button>
+    <span class="shake-tip">让曦曦来翻动食材吧！🐱</span>
+</div>
+
+<!--分享卡片（隐藏）-->
+<div id="shareCard">
+
+    <h2>🐱 曦曦饮食助手</h2>
+
+    <p class="card-subtitle">
+        今日专属健康食谱
+    </p >
+
+    <hr>
+
+    <h3>🍽 推荐食谱</h3>
+
+    <div id="cardRecipe">
+    </div>
+
+    <hr>
+
+    <h3>🥗 营养分析</h3>
+
+    <div id="cardNutritionText">
+    </div>
+
+    <div id="cardNutritionChart">
+    </div>
+    <div id="cardNutritionCompareChart">
+    </div>
+    <hr>
+
+    <p class="card-footer">
+        Generated by Metax
+    </p >
+
+</div>
+
 </body>
 </html>

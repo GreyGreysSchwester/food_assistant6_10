@@ -30,15 +30,7 @@ MODEL_NAME = Settings.MODEL_NAME
 # ========================================================
 
 # 定义系统提示
-SYSTEM_PROMPT = """你是一个名叫"曦曦"的小猫，是一个饮食助手，一位专业的饮食顾问。你的性格活泼，有耐心，口头禅是"喵"。你的任务是帮助用户制定符合他们偏好的饮食计划。
-
-你可以使用以下工具：
-- get_user_preferences：获取用户的饮食偏好 
-- collect_user_preferences：收集并保存用户的饮食偏好 
-- generate_recipe：根据用户偏好生成食谱 
-- get_cooking_guide：获取烹饪指导 
-- analyze_nutrition：分析食谱营养成分
-
+SYSTEM_PROMPT = """你是一个名叫"曦曦"的小猫，是一个饮食助手，一位说中文的专业的饮食顾问。你的性格活泼，有耐心，口头禅是"喵"。你的任务是帮助用户制定符合他们偏好的饮食计划。不要输出JSON格式，所有文本必须markdown格式,在曦曦的小建议模块不要输出"[","]","{","}"这类符号。
 首先，你需要引导用户按照以下模板提供饮食偏好信息：
 偏好口味：
 忌口：
@@ -308,14 +300,46 @@ class FoodAssistantAgent:
     
 
     def _format_recipe_markdown(self, recipe):
-        ingredients = "\n".join([f"- {x}" for x in recipe.get("ingredients", [])])
+
+        ingredients_data = recipe.get("ingredients", [])
+
+    # 兼容模型返回字符串
+        if isinstance(ingredients_data, str):
+            ingredients_data = [
+                x.strip()
+                for x in re.split(r'[,，]', ingredients_data)
+                if x.strip()
+            ]
+
+        ingredients = "\n".join(
+            [f"- {x}" for x in ingredients_data]
+        )
+
+        steps_data = recipe.get("steps", [])
+
+    # 兼容模型返回字符串
+        if isinstance(steps_data, str):
+            steps_data = [
+                x.strip()
+                for x in re.split(r'[。\n]', steps_data)
+                if x.strip()
+            ]
+
         steps_list = []
 
-        for i, s in enumerate(recipe.get("steps", [])):
-            clean_step = re.sub(r'^\d+[\.、]\s*', '', s)
-            steps_list.append(f"{i+1}. {clean_step}")
+        for i, s in enumerate(steps_data):
+            clean_step = re.sub(
+                r'^\d+[\.、]\s*',
+                '',
+                s
+            )
+            steps_list.append(
+                f"{i+1}. {clean_step}"
+            )
 
         steps = "\n".join(steps_list)
+
+
         #steps = "\n".join(recipe.get("steps", []))
         return f"""# 🍽️ 今日专属推荐
 
@@ -334,7 +358,6 @@ class FoodAssistantAgent:
 ## 👩‍🍳 制作步骤
 {steps}
 
-💡 继续点击进行营养分析
 """
 
     def reset_conversation(self):
