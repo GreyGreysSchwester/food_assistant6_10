@@ -6,7 +6,7 @@ load_dotenv()
 
 class Settings:
     # LLM配置
-    API_KEY = os.getenv("API_KEY", "1NJHGJ7C6C3DL4HKVFQQ655TX0ARTHRUYGTW1TWQ")
+    API_KEY = os.getenv("API_KEY", "")  # 真实 key 请写在 .env，勿硬编码
     BASE_URL = os.getenv("BASE_URL", "https://ai.gitee.com/v1")
     MODEL_NAME = os.getenv("MODEL_NAME", "Qwen2.5-72B-Instruct") #Qwen2.5-72B-Instruct
     
